@@ -2,17 +2,49 @@
 import Phaser from "phaser";
 import { onMounted } from "vue";
 
+const ScreenConfig = {
+    width: 800,
+    height: 600,
+};
+
+const TileConfig = {
+    tileWidth: 16,
+    tileHeight: 16,
+    width: ScreenConfig.width,
+    height: ScreenConfig.height,
+};
+
 class GameSceen extends Phaser.Scene {
     preload() {
+        // player
         this.load.spritesheet("player", "/assets/player.png", {
             frameWidth: 64,
             frameHeight: 64,
         });
+
+        // grass tiles
+        this.load.image("grass_tileset", "assets/grass_tileset.png");
     }
 
     create() {
-        this.player = this.add.sprite(400, 300, "player");
+        // grass tiles
+        const map = this.make.tilemap(TileConfig);
+        const tileset = map.addTilesetImage("grass_tileset");
+        const layer = map.createBlankLayer("grass_layer", tileset);
+
+        layer.randomize(
+            0,
+            0,
+            ScreenConfig.width / 16,
+            ScreenConfig.height / 16,
+            [0, 50, 100]
+        );
+
+        // player anims
+        this.player = this.matter.add.sprite(400, 300, "player");
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        this.cameras.main.startFollow(this.player);
 
         this.anims.create({
             key: "walk_up",
@@ -65,23 +97,23 @@ class GameSceen extends Phaser.Scene {
     }
 
     update() {
-        const speed = 50;
+        const speed = 1;
 
-        this.player.body.setVelocity(0);
+        this.player.setVelocity(0);
 
         if (this.cursors.left.isDown) {
-            this.player.body.setVelocityX(-speed);
+            this.player.setVelocityX(-speed);
             this.player.play("walk_left", true);
         } else if (this.cursors.right.isDown) {
-            this.player.body.setVelocityX(speed);
+            this.player.setVelocityX(speed);
             this.player.play("walk_right", true);
         }
 
         if (this.cursors.up.isDown) {
-            this.player.body.setVelocityY(-speed);
+            this.player.setVelocityY(-speed);
             this.player.play("walk_up", true);
         } else if (this.cursors.down.isDown) {
-            this.player.body.setVelocityY(speed);
+            this.player.setVelocityY(speed);
             this.player.play("walk_down", true);
         }
 
@@ -97,13 +129,13 @@ class GameSceen extends Phaser.Scene {
 onMounted(() => {
     const config = {
         type: Phaser.AUTO,
-        width: 800,
-        height: 600,
+        width: ScreenConfig.width,
+        height: ScreenConfig.height,
         physics: {
-            default: "matter", // Используем Matter.js
+            default: "matter",
             matter: {
-                gravity: { y: 0 }, // Гравитация отключена (вид сверху)
-                debug: true, // Включите для отладки коллизий
+                gravity: { y: 0 },
+                debug: true,
             },
         },
         parent: "game-container",
