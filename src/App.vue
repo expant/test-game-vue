@@ -7,6 +7,11 @@ const ScreenConfig = {
     height: 600,
 };
 
+const mapConfig = {
+    width: ScreenConfig.width * 1.5,
+    height: ScreenConfig.height * 1.5,
+};
+
 const TileConfig = {
     tileWidth: 16,
     tileHeight: 16,
@@ -23,29 +28,44 @@ class GameSceen extends Phaser.Scene {
         });
 
         // grass tiles
-        this.load.image("grass_tileset", "assets/grass_tileset.png");
+        this.load.image("grass_tileset", "assets/tilesets/grass.png");
+        // this.load.image("wall_tileset", "assets/tilesets/wall.png");
     }
 
     create() {
         // grass tiles
-        const map = this.make.tilemap(TileConfig);
-        const tileset = map.addTilesetImage("grass_tileset");
-        const layer = map.createBlankLayer("grass_layer", tileset);
 
-        layer.randomize(
+        const map = this.make.tilemap(TileConfig);
+        // const wallTileset = map.addTilesetImage("wall_tileset");
+        const grassTileset = map.addTilesetImage("grass_tileset");
+
+        // const wallLayer = map.createBlankLayer("wall_layer", wallTileset);
+        const grassLayer = map.createBlankLayer("grass_layer", grassTileset);
+
+        grassLayer.randomize(
             0,
             0,
-            ScreenConfig.width / 16,
-            ScreenConfig.height / 16,
+            mapConfig.width,
+            mapConfig.height,
             [0, 50, 100]
         );
 
-        // player anims
+        // wallLayer.fill(1, 2, 9, mapConfig.width, 1); // Верх
+        // wallLayer.fill(1, 0, mapConfig.height - 1, mapConfig.width, 1); // Низ
+        // wallLayer.fill(1, 0, 1, 1, mapConfig.height - 2); // Лево
+        // wallLayer.fill(1, mapConfig.width - 1, 1, 1, mapConfig.height - 2); // Право
+
+        // wallLayer.setCollisionByProperty({ collides: true });
+
+        this.cameras.main.setBounds(0, 0, mapConfig.width, mapConfig.height);
+        this.matter.world.setBounds(0, 0, mapConfig.width, mapConfig.height);
         this.player = this.matter.add.sprite(400, 300, "player");
+        this.player.setFixedRotation();
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.cameras.main.startFollow(this.player);
 
+        // player anims
         this.anims.create({
             key: "walk_up",
             frames: this.anims.generateFrameNumbers("player", {
@@ -89,7 +109,7 @@ class GameSceen extends Phaser.Scene {
         // Анимация покоя (первый кадр "вниз")
         this.anims.create({
             key: "idle",
-            frames: [{ key: "player", frame: 0 }],
+            frames: [{ key: "player", frame: 18 }],
             frameRate: 1,
         });
 
@@ -97,7 +117,7 @@ class GameSceen extends Phaser.Scene {
     }
 
     update() {
-        const speed = 1;
+        const speed = 2;
 
         this.player.setVelocity(0);
 
