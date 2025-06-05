@@ -1,19 +1,8 @@
 {
-    "name": "template-vue",
-    "description": "A Phaser 3 project template that demonstrates Vue communication and uses Vite for bundling.",
-    "version": "1.2.0",
+    "name": "test-game-vue",
+    "version": "1.0.0",
     "type": "module",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/phaserjs/template-vue.git"
-    },
-    "author": "Phaser Studio <support@phaser.io> (https://phaser.io/)",
-    "license": "MIT",
-    "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
-    "bugs": {
-        "url": "https://github.com/phaserjs/template-vue/issues"
-    },
-    "homepage": "https://github.com/phaserjs/template-vue#readme",
+    "author": "Anton Elagin",
     "keywords": [
         "phaser",
         "phaser3",
@@ -36,3 +25,4 @@
         "vite": "^6.3.1"
     }
 }
+
