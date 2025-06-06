@@ -19,6 +19,9 @@ const TileConfig = {
     height: ScreenConfig.height,
 };
 
+let isChestOpened = false;
+let isWinText = false;
+
 class GameSceen extends Phaser.Scene {
     preload() {
         // player
@@ -26,20 +29,17 @@ class GameSceen extends Phaser.Scene {
             frameWidth: 64,
             frameHeight: 64,
         });
+        this.load.spritesheet("chest", "/assets/chest.png", {
+            frameWidth: 32,
+            frameHeight: 46,
+        });
 
-        // grass tiles
         this.load.image("grass_tileset", "assets/tilesets/grass.png");
-        // this.load.image("wall_tileset", "assets/tilesets/wall.png");
     }
 
     create() {
-        // grass tiles
-
         const map = this.make.tilemap(TileConfig);
-        // const wallTileset = map.addTilesetImage("wall_tileset");
         const grassTileset = map.addTilesetImage("grass_tileset");
-
-        // const wallLayer = map.createBlankLayer("wall_layer", wallTileset);
         const grassLayer = map.createBlankLayer("grass_layer", grassTileset);
 
         grassLayer.randomize(
@@ -50,17 +50,66 @@ class GameSceen extends Phaser.Scene {
             [0, 50, 100]
         );
 
-        // wallLayer.fill(1, 2, 9, mapConfig.width, 1); // Верх
-        // wallLayer.fill(1, 0, mapConfig.height - 1, mapConfig.width, 1); // Низ
-        // wallLayer.fill(1, 0, 1, 1, mapConfig.height - 2); // Лево
-        // wallLayer.fill(1, mapConfig.width - 1, 1, 1, mapConfig.height - 2); // Право
-
-        // wallLayer.setCollisionByProperty({ collides: true });
-
         this.cameras.main.setBounds(0, 0, mapConfig.width, mapConfig.height);
         this.matter.world.setBounds(0, 0, mapConfig.width, mapConfig.height);
+
         this.player = this.matter.add.sprite(400, 300, "player");
+        this.chest = this.matter.add.sprite(400, 200, "chest", null, {
+            isStatic: true,
+            isSensor: true,
+        });
+
+        this.player.setScale(1.5);
+        this.chest.setScale(1.5);
+
+        this.openChestText = this.add
+            .text(400, 150, "Press [X]", {
+                font: "20px Arial",
+                fill: "#ffffff",
+                backgroundColor: "#000000",
+                padding: { x: 10, y: 5 },
+            })
+            .setOrigin(0.5)
+            .setVisible(false);
+
+        // this.tweens.add({
+        //     targets: this.openChestText,
+        //     alpha: 1,
+        //     duration: 500,
+        // });
+
+        this.showText = this.add
+            .text(
+                this.cameras.main.centerX,
+                this.cameras.main.centerY,
+                "Win!\npress [X] to back",
+                {
+                    font: "80px Arial",
+                    fill: "#ffffff",
+                    backgroundColor: "#000000",
+                    align: "center",
+                    wordWrap: {
+                        width: this.cameras.main.width * 0.8,
+                        useAdvancedWrap: true,
+                    },
+                    padding: { x: 0, y: 200 },
+                    fixedWidth: this.cameras.main.width,
+                    fixedHeight: this.cameras.main.height,
+                }
+            )
+            .setOrigin(0.5)
+            .setVisible(false)
+            .setScrollFactor(0);
+
+        this.chest.setDepth(1);
+        this.player.setDepth(2);
+        this.openChestText.setDepth(3);
+        this.showText.setDepth(4);
+
+        this.interactionZone = this.chest.body;
+
         this.player.setFixedRotation();
+
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.cameras.main.startFollow(this.player);
@@ -117,7 +166,7 @@ class GameSceen extends Phaser.Scene {
     }
 
     update() {
-        const speed = 2;
+        const speed = 4;
 
         this.player.setVelocity(0);
 
@@ -143,6 +192,43 @@ class GameSceen extends Phaser.Scene {
         ) {
             this.player.play("idle", true);
         }
+
+        const distance = Phaser.Math.Distance.Between(
+            this.player.x,
+            this.player.y,
+            this.chest.x,
+            this.chest.y
+        );
+
+        let isXPressed = Phaser.Input.Keyboard.JustDown(
+            this.input.keyboard.addKey("X")
+        );
+
+        if (isXPressed) {
+            isWinText = false;
+            this.showText.setVisible(false);
+        }
+
+        if (distance < 100) {
+            if (isChestOpened) return;
+
+            this.openChestText.setVisible(true);
+            this.openChestText.setPosition(this.chest.x, this.chest.y - 75);
+
+            if (isXPressed) {
+                console.log("Клавиша X нажата!");
+                isChestOpened = true;
+                isWinText = true;
+
+                this.openChestText.setVisible(false);
+                this.showText.setVisible(true);
+                this.chest.setFrame(1);
+            }
+        } else {
+            isChestOpened = false;
+            this.openChestText.setVisible(false);
+            this.chest.setFrame(0);
+        }
     }
 }
 
@@ -155,7 +241,7 @@ onMounted(() => {
             default: "matter",
             matter: {
                 gravity: { y: 0 },
-                debug: true,
+                // debug: true,
             },
         },
         parent: "game-container",
